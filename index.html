@@ -266,7 +266,7 @@ document.getElementById('contact-form').addEventListener('submit', async functio
     profession: form.profession.value,
     package: form.package.value
   };
-  const resposta = await fetch('https://script.google.com/macros/s/AKfycbzlKSMghuX_y1CWztRZYaUqodV8L_gBay6edXFXyNWFQLRgnUYOiJfoZFkWyH3pXC53XA/exec', {
+  const resposta = await fetch('https://script.google.com/macros/s/AKfycbwlHzE5lkKJ5Lo3bk0wqaQjXtoZH0CUKtVVpZblJpRgyIaCd5z5EMG3fzqRCcs4HSeP1g/exec', {
     method: 'POST',
     body: JSON.stringify(data),
     headers: { 'Content-Type': 'application/json' }
