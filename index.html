@@ -260,11 +260,11 @@ document.getElementById('contact-form').addEventListener('submit', async functio
   e.preventDefault();
   const form = e.target;
   const data = {
-    nome: form.name.value,
+    name: form.name.value,
     email: form.email.value,
-    whatsapp: form.phone.value,
-    profissao: form.profession.value,
-    pacote: form.package.value
+    phone: form.phone.value,
+    profession: form.profession.value,
+    package: form.package.value
   };
   const resposta = await fetch('https://script.google.com/macros/library/d/1XRBuAbEqT4Aqcbv5FXfYM5h8HPeU7K-jECyU-zHaIthoE4pKHRBRdklC/2', {
     method: 'POST',
