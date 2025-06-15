@@ -254,5 +254,32 @@
     </div>
 
     <script src="app.js"></script>
+
+    <script>
+document.getElementById('contact-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = {
+    nome: form.name.value,
+    email: form.email.value,
+    whatsapp: form.phone.value,
+    profissao: form.profession.value,
+    pacote: form.package.value
+  };
+  const resposta = await fetch('https://script.google.com/macros/s/AKfycbym3JkVPwgApubBThwkAQg6lIpnzHizNujdj2hrLmUzrbL72Q4zazvUW-vzg8uAQyvVYQ/exec', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if(resposta.ok) {
+    // Exibe o modal de sucesso
+    document.querySelector('.modal').classList.remove('modal--active');
+    document.querySelector('.success-modal').classList.add('modal--active');
+    form.reset();
+  } else {
+    alert('Erro ao enviar. Tente novamente.');
+  }
+});
+</script>   
 </body>
 </html>
