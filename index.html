@@ -3,328 +3,439 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consultoria de IA Personalizada - Transforme sua Carreira com Inteligência Artificial</title>
-    <meta name="description" content="A inteligência artificial não vai tomar seu emprego, mas alguém que sabe usar IA vai. Consultoria personalizada para profissionais.">
-    <link rel="stylesheet" href="style.css">
+    <title>Consultoria de IA - Modal de Contato</title>
+    <style>
+        /* Reset e Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #f8fafc;
+        }
+
+        /* Botão CTA Principal */
+        .cta-button {
+            background: linear-gradient(135deg, #2563eb 0%, #059669 100%);
+            color: white;
+            padding: 18px 48px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px 0 rgba(37, 99, 235, 0.4);
+        }
+
+        .cta-button:active {
+            transform: translateY(0);
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Modal Container */
+        .modal-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.8);
+            max-width: 480px;
+            width: 90vw;
+            max-height: 90vh;
+            position: relative;
+            transform: scale(0.8) translateY(50px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .modal-overlay.active .modal-container {
+            transform: scale(1) translateY(0);
+        }
+
+        /* Modal Header */
+        .modal-header {
+            background: linear-gradient(135deg, #2563eb 0%, #059669 100%);
+            color: white;
+            padding: 32px 32px 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grain)"/></svg>');
+            opacity: 0.1;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .modal-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        /* Close Button */
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        /* Modal Body */
+        .modal-body {
+            padding: 0;
+            position: relative;
+        }
+
+        /* Google Forms Container */
+        .forms-container {
+            position: relative;
+            background: white;
+        }
+
+        .forms-iframe {
+            width: 100%;
+            height: 650px;
+            border: none;
+            border-radius: 0 0 24px 24px;
+        }
+
+        /* Loading State */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0 0 24px 24px;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e5e7eb;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 640px) {
+            .modal-container {
+                width: 95vw;
+                max-height: 95vh;
+                border-radius: 16px;
+            }
+
+            .modal-header {
+                padding: 24px 20px 20px;
+                border-radius: 16px 16px 0 0;
+            }
+
+            .modal-title {
+                font-size: 1.3rem;
+            }
+
+            .modal-subtitle {
+                font-size: 0.9rem;
+            }
+
+            .forms-iframe {
+                height: 600px;
+                border-radius: 0 0 16px 16px;
+            }
+
+            .loading-overlay {
+                border-radius: 0 0 16px 16px;
+            }
+        }
+
+        /* Animações de entrada */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Estilo para demo */
+        .demo-container {
+            padding: 80px 20px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .demo-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #2563eb 0%, #059669 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .demo-subtitle {
+            font-size: 1.2rem;
+            color: #64748b;
+            margin-bottom: 48px;
+            max-width: 600px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Hero Section -->
-    <section class="hero" id="main-content">
-        <div class="container">
-            <div class="hero__content">
-                <div class="hero__badge">
-                    <span class="status status--success">🚀 + de 500 profissionais transformados</span>
-                </div>
-                <h1 class="hero__headline">A inteligência artificial não vai tomar seu emprego, mas alguém que sabe usar IA vai.</h1>
-                <p class="hero__subtitle">Transforme sua carreira com consultoria personalizada em IA. Aprenda a usar ferramentas inteligentes que vão te colocar à frente da concorrência e automatizar suas tarefas diárias.</p>
-                <div class="hero__cta">
-                    <button class="btn btn--primary btn--lg cta-button" data-modal="contact">
-                        Quero Transformar Minha Carreira
-                    </button>
-                    <div class="hero__proof">
-                        <span class="proof-text">✓ Resultados em 30 dias</span>
-                        <span class="proof-text">✓ Suporte personalizado</span>
-                        <span class="proof-text">✓ Garantia de satisfação</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+    <!-- Conteúdo da página (exemplo) -->
+    <div class="demo-container">
+        <h1 class="demo-title">Consultoria de IA Personalizada</h1>
+        <p class="demo-subtitle">
+            A inteligência artificial não vai tomar seu emprego, mas alguém que sabe usar IA vai.
+        </p>
+        <button class="cta-button" id="openModal">
+            Começar agora
+        </button>
+    </div>
 
-    <!-- Como Funciona -->
-    <section class="process">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Como Funciona Nossa Consultoria</h2>
-                <p class="section-subtitle">Um processo simples e eficaz para transformar sua rotina profissional</p>
-            </div>
-            
-            <div class="process__grid">
-                <div class="process__step">
-                    <div class="step__number">01</div>
-                    <div class="step__content">
-                        <h3 class="step__title">Formulário Rápido</h3>
-                        <p class="step__description">Você responde um formulário rápido para entendermos sua rotina, desafios e necessidades.</p>
-                    </div>
-                </div>
-                
-                <div class="process__step">
-                    <div class="step__number">02</div>
-                    <div class="step__content">
-                        <h3 class="step__title">Plano Personalizado</h3>
-                        <p class="step__description">Você recebe um documento prático explicando, passo a passo, como usar a IA no seu trabalho.</p>
-                    </div>
-                </div>
-                
-                <div class="process__step">
-                    <div class="step__number">03</div>
-                    <div class="step__content">
-                        <h3 class="step__title">Configuração com Suporte</h3>
-                        <p class="step__description">Ajudamos você a escolher a melhor ferramenta de IA e criamos um agente personalizado.</p>
-                    </div>
-                </div>
-                
-                <div class="process__step">
-                    <div class="step__number">04</div>
-                    <div class="step__content">
-                        <h3 class="step__title">Uso Diário</h3>
-                        <p class="step__description">Você consulta seu agente de IA por chat ou voz sempre que precisar para automatizar tarefas.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- O que Você Recebe -->
-    <section class="benefits">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">O que Você Recebe</h2>
-                <p class="section-subtitle">Benefícios tangíveis que transformarão sua forma de trabalhar</p>
-            </div>
-            
-            <div class="benefits__grid">
-                <div class="benefit__card">
-                    <div class="benefit__icon">📋</div>
-                    <h3 class="benefit__title">Plano de Ação Exclusivo</h3>
-                    <p class="benefit__description">Um documento prático, feito sob medida para sua rotina, mostrando exatamente como usar a IA para automatizar tarefas, economizar tempo e elevar sua performance.</p>
-                </div>
-                
-                <div class="benefit__card">
-                    <div class="benefit__icon">🤖</div>
-                    <h3 class="benefit__title">Agente de IA Customizado</h3>
-                    <p class="benefit__description">Criamos e configuramos um agente inteligente, adaptado às suas necessidades, que será seu copiloto no trabalho – pronto para responder dúvidas, gerar ideias e agilizar processos.</p>
-                </div>
-                
-                <div class="benefit__card">
-                    <div class="benefit__icon">👥</div>
-                    <h3 class="benefit__title">Orientação e Suporte Pessoal</h3>
-                    <p class="benefit__description">Acompanhamento individual para garantir que você aproveite ao máximo a IA, com suporte para dúvidas e ajustes conforme sua evolução.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Impacto na Carreira -->
-    <section class="impact">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Impacto na Sua Carreira</h2>
-                <p class="section-subtitle">Veja como a IA pode transformar seu futuro profissional</p>
-            </div>
-            
-            <div class="impact__grid">
-                <div class="impact__item">
-                    <div class="impact__icon">⭐</div>
-                    <div class="impact__content">
-                        <h3 class="impact__title">Destaque profissional</h3>
-                        <p class="impact__description">Você estará entre os poucos que dominam o uso prático da IA, tornando-se referência e ganhando vantagem competitiva no seu setor.</p>
-                    </div>
-                </div>
-                
-                <div class="impact__item">
-                    <div class="impact__icon">📈</div>
-                    <div class="impact__content">
-                        <h3 class="impact__title">Produtividade elevada</h3>
-                        <p class="impact__description">Reduza tarefas repetitivas, ganhe tempo para o que realmente importa e aumente sua capacidade de entrega.</p>
-                    </div>
-                </div>
-                
-                <div class="impact__item">
-                    <div class="impact__icon">🔄</div>
-                    <div class="impact__content">
-                        <h3 class="impact__title">Atualização constante</h3>
-                        <p class="impact__description">Aprenda a usar as ferramentas mais modernas do mercado, mantendo-se à frente das mudanças e preparado para o futuro do trabalho.</p>
-                    </div>
-                </div>
-                
-                <div class="impact__item">
-                    <div class="impact__icon">🛡️</div>
-                    <div class="impact__content">
-                        <h3 class="impact__title">Segurança e autonomia</h3>
-                        <p class="impact__description">Você aprende a usar a IA de forma ética, segura e independente, sem depender de terceiros para inovar no seu dia a dia.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Planos -->
-    <section class="pricing">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Escolha Seu Plano</h2>
-                <p class="section-subtitle">Opções flexíveis para atender diferentes necessidades e orçamentos</p>
-            </div>
-            
-            <div class="pricing__grid">
-                <!-- Pacote Essencial -->
-                <div class="pricing__card">
-                    <div class="card__header">
-                        <h3 class="card__title">Pacote Essencial</h3>
-                        <p class="card__subtitle">Diagnóstico e Copiloto Inicial</p>
-                        <div class="card__price">
-                            <span class="price__value">R$ 2.500</span>
-                            <span class="price__period">4 semanas</span>
-                        </div>
-                    </div>
-                    <div class="card__body">
-                        <ul class="feature__list">
-                            <li>✓ Diagnóstico personalizado do seu perfil e rotina profissional</li>
-                            <li>✓ Identificação das melhores oportunidades de uso de IA no seu dia a dia</li>
-                            <li>✓ Criação e configuração de 1 agente de IA personalizado</li>
-                            <li>✓ Documento prático: passo a passo de como usar a IA no seu trabalho</li>
-                            <li>✓ 2 sessões de treinamento individual (2h cada)</li>
-                            <li>✓ Suporte próximo por 30 dias via WhatsApp, e-mail ou Discord</li>
-                        </ul>
-                    </div>
-                    <div class="card__footer">
-                        <button class="btn btn--outline btn--full-width cta-button" data-modal="contact">
-                            Escolher Essencial
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Pacote Avançado -->
-                <div class="pricing__card pricing__card--featured">
-                    <div class="card__badge">Mais Popular</div>
-                    <div class="card__header">
-                        <h3 class="card__title">Pacote Avançado</h3>
-                        <p class="card__subtitle">Transformação Profissional Completa</p>
-                        <div class="card__price">
-                            <span class="price__value">R$ 4.000</span>
-                            <span class="price__period">8 semanas</span>
-                        </div>
-                    </div>
-                    <div class="card__body">
-                        <ul class="feature__list">
-                            <li>✓ Todos os itens do Pacote Essencial</li>
-                            <li>✓ Implementação de até 3 agentes de IA personalizados</li>
-                            <li>✓ Integração dos agentes de IA com ferramentas e sistemas que você já utiliza</li>
-                            <li>✓ Criação de manual personalizado de prompts e comandos</li>
-                            <li>✓ 4 sessões de treinamento individual (2h cada)</li>
-                            <li>✓ Suporte prioritário por 60 dias via WhatsApp, e-mail ou Discord</li>
-                        </ul>
-                    </div>
-                    <div class="card__footer">
-                        <button class="btn btn--primary btn--full-width cta-button" data-modal="contact">
-                            Escolher Avançado
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Consultoria Contínua -->
-                <div class="pricing__card">
-                    <div class="card__header">
-                        <h3 class="card__title">Consultoria Contínua</h3>
-                        <p class="card__subtitle">Acompanhamento Mensal</p>
-                        <div class="card__price">
-                            <span class="price__value">R$ 800</span>
-                            <span class="price__period">mensal</span>
-                        </div>
-                    </div>
-                    <div class="card__body">
-                        <ul class="feature__list">
-                            <li>✓ Atualização mensal dos seus agentes de IA</li>
-                            <li>✓ 1 sessão mensal de acompanhamento para análise de resultados</li>
-                            <li>✓ Suporte prioritário contínuo para dúvidas e otimizações</li>
-                            <li>✓ Relatórios de desempenho e recomendações práticas</li>
-                        </ul>
-                    </div>
-                    <div class="card__footer">
-                        <button class="btn btn--outline btn--full-width cta-button" data-modal="contact">
-                            Escolher Contínuo
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA Final -->
-    <section class="final-cta">
-        <div class="container">
-            <div class="cta__content">
-                <h2 class="cta__title">Pronto para Transformar sua Carreira?</h2>
-                <p class="cta__subtitle">Junte-se aos profissionais que já estão usando a IA para se destacar no mercado</p>
-                <button class="btn btn--primary btn--lg cta-button" data-modal="contact">
-                    Começar Agora
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <!-- Header do Modal -->
+            <div class="modal-header">
+                <button class="modal-close" id="closeModal" aria-label="Fechar modal">
+                    ×
                 </button>
+                <h2 class="modal-title">Vamos Começar Sua Jornada com IA</h2>
+                <p class="modal-subtitle">
+                    Preencha os dados abaixo e entraremos em contato em até 2 horas úteis
+                </p>
             </div>
-        </div>
-    </section>
 
-    <!-- Modal de Contato -->
-    <div class="modal" id="contactModal">
-        <div class="modal__overlay">
-            <div class="modal__content">
-                <div class="modal__header">
-                    <h2 class="modal__title">Entre em Contato</h2>
-                    <button class="modal__close" id="closeModal" aria-label="Fechar modal">&times;</button>
-                </div>
-                <div class="modal__body">
-                    <div class="integration-info">
-                        <div class="info-header">
-                            <div class="info-icon">🔗</div>
-                            <h3>Integração com Google Forms</h3>
-                        </div>
-                        <p class="info-description">Para completar a configuração, substitua este conteúdo pelo seu formulário do Google Forms seguindo os passos abaixo:</p>
-                        
-                        <div class="steps-container">
-                            <div class="step-item">
-                                <span class="step-number">1</span>
-                                <div class="step-content">
-                                    <strong>Crie seu formulário</strong>
-                                    <p>Acesse <a href="https://forms.google.com" target="_blank">Google Forms</a> e crie um novo formulário</p>
-                                </div>
-                            </div>
-                            
-                            <div class="step-item">
-                                <span class="step-number">2</span>
-                                <div class="step-content">
-                                    <strong>Obtenha o código de incorporação</strong>
-                                    <p>Clique em "Enviar" → ícone "&lt;/&gt;" → copie o código iframe</p>
-                                </div>
-                            </div>
-                            
-                            <div class="step-item">
-                                <span class="step-number">3</span>
-                                <div class="step-content">
-                                    <strong>Substitua no código</strong>
-                                    <p>Cole o iframe no lugar desta seção no arquivo HTML</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="code-example">
-                            <div class="code-header">
-                                <span>Exemplo de código:</span>
-                                <button class="copy-btn" onclick="copyCode()" aria-label="Copiar código">📋</button>
-                            </div>
-                            <pre><code id="codeBlock">&lt;iframe src="https://forms.gle/QXs86SQPQJgyNeEg8" 
-        width="100%" 
-        height="500" 
-        frameborder="0" 
-        marginheight="0" 
-        marginwidth="0"&gt;
-    Carregando…
-&lt;/iframe&gt;</code></pre>
-                        </div>
-                        
-                        <div class="temp-contact">
-                            <h4>📧 Contato Temporário</h4>
-                            <p>Enquanto configura o formulário, você pode ser contatado em:</p>
-                            <div class="contact-methods">
-                                <span class="contact-item">✉️ seu-email@exemplo.com</span>
-                                <span class="contact-item">📱 (11) 99999-9999</span>
-                            </div>
-                        </div>
+            <!-- Body do Modal -->
+            <div class="modal-body">
+                <div class="forms-container">
+                    <!-- Loading State -->
+                    <div class="loading-overlay" id="loadingOverlay">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Carregando formulário...</div>
                     </div>
+                    
+                    <!-- Google Forms Iframe -->
+                    <iframe 
+                        class="forms-iframe" 
+                        id="formsIframe"
+                        src="https://docs.google.com/forms/d/e/1FAIpQLScKvJPWVrWIpeqJxOV2D9gDuxjlq-ZnsN_y067wphELMbGi3w/viewform?embedded=true"
+                        frameborder="0" 
+                        marginheight="0" 
+                        marginwidth="0">
+                        Carregando formulário...
+                    </iframe>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        // Elementos do DOM
+        const openModalBtn = document.getElementById('openModal');
+        const closeModalBtn = document.getElementById('closeModal');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const formsIframe = document.getElementById('formsIframe');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Função para abrir modal
+        function openModal() {
+            modalOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Foco no modal para acessibilidade
+            modalOverlay.focus();
+            
+            // Analytics/tracking (opcional)
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'modal_open', {
+                    'event_category': 'engagement',
+                    'event_label': 'contact_form'
+                });
+            }
+        }
+
+        // Função para fechar modal
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            
+            // Analytics/tracking (opcional)
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'modal_close', {
+                    'event_category': 'engagement',
+                    'event_label': 'contact_form'
+                });
+            }
+        }
+
+        // Event Listeners
+        openModalBtn.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+
+        // Fechar modal clicando no overlay
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                closeModal();
+            }
+        });
+
+        // Fechar modal com tecla ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+                closeModal();
+            }
+        });
+
+        // Controle do loading do iframe
+        formsIframe.addEventListener('load', () => {
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden');
+            }, 800); // Pequeno delay para suavizar a transição
+        });
+
+        // Prevenir scroll do body quando modal está ativo
+        modalOverlay.addEventListener('wheel', (e) => {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Trap focus no modal (acessibilidade)
+        const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        
+        modalOverlay.addEventListener('keydown', (e) => {
+            if (!modalOverlay.classList.contains('active')) return;
+            
+            if (e.key === 'Tab') {
+                const focusableContent = modalOverlay.querySelectorAll(focusableElements);
+                const firstFocusableElement = focusableContent[0];
+                const lastFocusableElement = focusableContent[focusableContent.length - 1];
+
+                if (e.shiftKey) {
+                    if (document.activeElement === firstFocusableElement) {
+                        lastFocusableElement.focus();
+                        e.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === lastFocusableElement) {
+                        firstFocusableElement.focus();
+                        e.preventDefault();
+                    }
+                }
+            }
+        });
+
+        // Animação de entrada do modal
+        modalOverlay.addEventListener('transitionend', (e) => {
+            if (e.target === modalOverlay && modalOverlay.classList.contains('active')) {
+                const modalContainer = modalOverlay.querySelector('.modal-container');
+                modalContainer.classList.add('animate-fade-in-up');
+            }
+        });
+    </script>
 </body>
 </html>
