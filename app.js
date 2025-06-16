@@ -1,200 +1,203 @@
 // DOM Elements
-const modal = document.getElementById('contactModal');
-const modalContainer = modal.querySelector('.modal__container');
-const modalBackdrop = modal.querySelector('.modal__backdrop');
-const modalClose = document.getElementById('closeModal');
-const modalLoading = document.getElementById('modalLoading');
-const contactForm = document.getElementById('contactForm');
-const openModalButtons = document.querySelectorAll('#openModal, #openModalFinal, .plan__cta');
-
-// State Management
-let isModalOpen = false;
-let focusedElementBeforeModal = null;
-
-// Initialize Application
-document.addEventListener('DOMContentLoaded', function() {
-    initializeEventListeners();
-    initializeScrollAnimations();
-    initializeAccessibility();
-});
-
-// Event Listeners
-function initializeEventListeners() {
-    // Modal Open Buttons
-    openModalButtons.forEach(button => {
-        button.addEventListener('click', handleModalOpen);
-    });
-
-    // Modal Close Events
-    modalClose.addEventListener('click', handleModalClose);
-    modalBackdrop.addEventListener('click', handleModalClose);
-    
-    // Keyboard Events
-    document.addEventListener('keydown', handleKeyDown);
-    
-    // Iframe Load Event
-    contactForm.addEventListener('load', handleIframeLoad);
-    
-    // Plan Selection
-    document.querySelectorAll('.plan__cta').forEach(button => {
-        button.addEventListener('click', handlePlanSelection);
-    });
-    
-    // Smooth Scrolling for Internal Links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', handleSmoothScroll);
-    });
-}
+const heroCTA = document.getElementById('hero-cta');
+const finalCTA = document.getElementById('final-cta');
+const pricingCTAs = document.querySelectorAll('.pricing-cta');
+const contactModal = document.getElementById('contact-modal');
+const successModal = document.getElementById('success-modal');
+const modalClose = document.getElementById('modal-close');
+const successClose = document.getElementById('success-close');
+const contactForm = document.getElementById('contact-form');
+const packageSelect = document.getElementById('package');
 
 // Modal Functions
-function handleModalOpen(event) {
-    event.preventDefault();
-    
-    // Store focused element for accessibility
-    focusedElementBeforeModal = document.activeElement;
-    
-    // Show modal
+function openModal(modal) {
     modal.classList.add('active');
-    modal.setAttribute('aria-hidden', 'false');
-    isModalOpen = true;
-    
-    // Prevent body scroll
     document.body.style.overflow = 'hidden';
     
-    // Show loading state
-    modalLoading.style.display = 'flex';
-    contactForm.style.opacity = '0';
-    
-    // Focus management
-    setTimeout(() => {
-        modalClose.focus();
-    }, 100);
-    
-    // Reload iframe to ensure fresh form
-    const currentSrc = contactForm.src;
-    contactForm.src = '';
-    contactForm.src = currentSrc;
-    
-    // Add animation classes
-    modalContainer.style.animation = 'modalSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
-    modalBackdrop.style.animation = 'fadeIn 0.3s ease-out';
+    // Focus first input
+    const firstInput = modal.querySelector('input, select, textarea');
+    if (firstInput) {
+        setTimeout(() => firstInput.focus(), 100);
+    }
 }
 
-function handleModalClose(event) {
-    if (event) {
-        event.preventDefault();
+function closeModal(modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function closeAllModals() {
+    contactModal.classList.remove('active');
+    successModal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// Event Listeners for CTA Buttons
+heroCTA.addEventListener('click', () => {
+    openModal(contactModal);
+});
+
+finalCTA.addEventListener('click', () => {
+    openModal(contactModal);
+});
+
+// Pricing CTA Buttons
+pricingCTAs.forEach((cta, index) => {
+    cta.addEventListener('click', () => {
+        // Pre-select package based on button clicked
+        const packages = ['essencial', 'avancado', 'continua'];
+        packageSelect.value = packages[index];
+        openModal(contactModal);
+    });
+});
+
+// Modal Close Events
+modalClose.addEventListener('click', () => {
+    closeModal(contactModal);
+});
+
+successClose.addEventListener('click', () => {
+    closeModal(successModal);
+});
+
+// Close modal when clicking overlay
+contactModal.addEventListener('click', (e) => {
+    if (e.target === contactModal || e.target.classList.contains('modal__overlay')) {
+        closeModal(contactModal);
+    }
+});
+
+successModal.addEventListener('click', (e) => {
+    if (e.target === successModal || e.target.classList.contains('modal__overlay')) {
+        closeModal(successModal);
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeAllModals();
+    }
+});
+
+// Form Validation and Submission
+function validateForm(formData) {
+    const errors = [];
+    
+    if (!formData.name.trim()) {
+        errors.push('Nome é obrigatório');
     }
     
-    if (!isModalOpen) return;
+    if (!formData.email.trim()) {
+        errors.push('E-mail é obrigatório');
+    } else if (!isValidEmail(formData.email)) {
+        errors.push('E-mail deve ter um formato válido');
+    }
     
-    // Hide modal with animation
-    modalContainer.style.animation = 'modalSlideOut 0.3s ease-in';
-    modalBackdrop.style.animation = 'fadeOut 0.3s ease-in';
+    if (!formData.phone.trim()) {
+        errors.push('WhatsApp é obrigatório');
+    }
     
+    if (!formData.profession.trim()) {
+        errors.push('Profissão é obrigatória');
+    }
+    
+    if (!formData.package) {
+        errors.push('Selecione um pacote');
+    }
+    
+    return errors;
+}
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function formatPhoneNumber(phone) {
+    // Remove all non-digits
+    const cleaned = phone.replace(/\D/g, '');
+    
+    // Format as Brazilian phone number
+    if (cleaned.length === 11) {
+        return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+    } else if (cleaned.length === 10) {
+        return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
+    }
+    
+    return phone;
+}
+
+// Real-time phone formatting
+document.getElementById('phone').addEventListener('input', (e) => {
+    const input = e.target;
+    const value = input.value.replace(/\D/g, '');
+    
+    if (value.length <= 11) {
+        input.value = formatPhoneNumber(value);
+    }
+});
+
+// Form Submission
+contactForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        profession: document.getElementById('profession').value,
+        package: document.getElementById('package').value
+    };
+    
+    const errors = validateForm(formData);
+    
+    if (errors.length > 0) {
+        alert('Por favor, corrija os seguintes erros:\n\n' + errors.join('\n'));
+        return;
+    }
+    
+    // Simulate form submission
+    const submitButton = contactForm.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    
+    submitButton.textContent = 'Enviando...';
+    submitButton.disabled = true;
+    
+    // Simulate API call delay
     setTimeout(() => {
-        modal.classList.remove('active');
-        modal.setAttribute('aria-hidden', 'true');
-        isModalOpen = false;
+        submitButton.textContent = originalText;
+        submitButton.disabled = false;
         
-        // Restore body scroll
-        document.body.style.overflow = '';
+        // Close contact modal and show success modal
+        closeModal(contactModal);
         
-        // Reset animations
-        modalContainer.style.animation = '';
-        modalBackdrop.style.animation = '';
+        setTimeout(() => {
+            openModal(successModal);
+        }, 300);
         
-        // Restore focus
-        if (focusedElementBeforeModal) {
-            focusedElementBeforeModal.focus();
-            focusedElementBeforeModal = null;
-        }
-    }, 300);
-}
+        // Reset form
+        contactForm.reset();
+        
+        // Log form data for demonstration
+        console.log('Form submitted:', formData);
+        
+    }, 2000);
+});
 
-function handleIframeLoad() {
-    // Hide loading state
-    setTimeout(() => {
-        modalLoading.style.display = 'none';
-        contactForm.style.opacity = '1';
-        contactForm.style.transition = 'opacity 0.3s ease';
-    }, 500);
-}
-
-// Plan Selection
-function handlePlanSelection(event) {
-    const planType = event.target.getAttribute('data-plan');
-    
-    // Add visual feedback
-    event.target.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-        event.target.style.transform = '';
-    }, 150);
-    
-    // Store selected plan in sessionStorage for form pre-filling
-    if (planType) {
-        sessionStorage.setItem('selectedPlan', planType);
-    }
-    
-    // Open modal
-    handleModalOpen(event);
-}
-
-// Keyboard Navigation
-function handleKeyDown(event) {
-    if (!isModalOpen) return;
-    
-    switch (event.key) {
-        case 'Escape':
-            handleModalClose();
-            break;
-        case 'Tab':
-            handleTabNavigation(event);
-            break;
-    }
-}
-
-function handleTabNavigation(event) {
-    const focusableElements = modal.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    
-    const firstFocusable = focusableElements[0];
-    const lastFocusable = focusableElements[focusableElements.length - 1];
-    
-    if (event.shiftKey) {
-        if (document.activeElement === firstFocusable) {
-            lastFocusable.focus();
-            event.preventDefault();
-        }
-    } else {
-        if (document.activeElement === lastFocusable) {
-            firstFocusable.focus();
-            event.preventDefault();
-        }
-    }
-}
-
-// Smooth Scrolling
-function handleSmoothScroll(event) {
-    event.preventDefault();
-    const targetId = event.currentTarget.getAttribute('href');
-    const targetElement = document.querySelector(targetId);
-    
-    if (targetElement) {
-        targetElement.scrollIntoView({
+// Smooth Scrolling for internal links
+function smoothScroll(target) {
+    const element = document.querySelector(target);
+    if (element) {
+        element.scrollIntoView({
             behavior: 'smooth',
             block: 'start'
         });
     }
 }
 
-// Scroll Animations
-function initializeScrollAnimations() {
-    // Only add animations if user hasn't requested reduced motion
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        return;
-    }
-    
+// Intersection Observer for animations
+function createIntersectionObserver() {
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
@@ -203,46 +206,154 @@ function initializeScrollAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.style.animation = 'scrollFadeIn 0.6s ease-out forwards';
-                observer.unobserve(entry.target);
+                entry.target.style.animationPlayState = 'running';
             }
         });
     }, observerOptions);
     
-    // Observe elements for scroll animations
-    const animatedElements = document.querySelectorAll(
-        '.process__step, .benefit__card, .impact__item, .plan__card'
-    );
-    
-    animatedElements.forEach((element, index) => {
-        element.style.animationDelay = `${index * 0.1}s`;
-        observer.observe(element);
+    // Observe animated elements
+    const animatedElements = document.querySelectorAll('.step, .benefit-card, .impact-item, .pricing-card');
+    animatedElements.forEach(el => {
+        el.style.animationPlayState = 'paused';
+        observer.observe(el);
     });
 }
 
-// Accessibility Enhancements
-function initializeAccessibility() {
-    // Add ARIA labels to interactive elements
-    const ctaButtons = document.querySelectorAll('.btn');
-    ctaButtons.forEach(button => {
-        if (!button.getAttribute('aria-label')) {
-            const text = button.textContent.trim();
-            button.setAttribute('aria-label', text);
-        }
-    });
+// Initialize animations when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    createIntersectionObserver();
+});
+
+// Button hover effects
+function addButtonEffects() {
+    const buttons = document.querySelectorAll('.btn');
     
-    // Add role attributes
-    const cards = document.querySelectorAll('.plan__card, .benefit__card, .process__step');
+    buttons.forEach(button => {
+        button.addEventListener('mouseenter', () => {
+            button.style.transform = 'translateY(-2px)';
+        });
+        
+        button.addEventListener('mouseleave', () => {
+            button.style.transform = 'translateY(0)';
+        });
+    });
+}
+
+// Card hover effects
+function addCardEffects() {
+    const cards = document.querySelectorAll('.step, .benefit-card, .impact-item, .pricing-card');
+    
     cards.forEach(card => {
-        card.setAttribute('role', 'article');
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-5px)';
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+        });
     });
-    
-    // Enhance form accessibility
-    const iframe = document.getElementById('contactForm');
-    iframe.setAttribute('title', 'Formulário de Contato para Consultoria de IA');
 }
 
-// Performance Optimizations
+// Pricing card selection highlight
+function addPricingInteraction() {
+    const pricingCards = document.querySelectorAll('.pricing-card');
+    
+    pricingCards.forEach((card, index) => {
+        card.addEventListener('click', () => {
+            // Remove active class from all cards
+            pricingCards.forEach(c => c.classList.remove('pricing-card--selected'));
+            
+            // Add active class to clicked card
+            card.classList.add('pricing-card--selected');
+            
+            // Pre-select package in form
+            const packages = ['essencial', 'avancado', 'continua'];
+            packageSelect.value = packages[index];
+        });
+    });
+}
+
+// Loading animation for hero section
+function animateHero() {
+    const heroTitle = document.querySelector('.hero__title');
+    const heroSubtitle = document.querySelector('.hero__subtitle');
+    const heroCTA = document.querySelector('.hero__cta');
+    const aiIcon = document.querySelector('.ai-icon');
+    
+    // Animate elements on load
+    setTimeout(() => {
+        heroTitle.style.opacity = '1';
+        heroTitle.style.transform = 'translateY(0)';
+    }, 200);
+    
+    setTimeout(() => {
+        heroSubtitle.style.opacity = '1';
+        heroSubtitle.style.transform = 'translateY(0)';
+    }, 400);
+    
+    setTimeout(() => {
+        heroCTA.style.opacity = '1';
+        heroCTA.style.transform = 'translateY(0)';
+    }, 600);
+    
+    setTimeout(() => {
+        aiIcon.style.opacity = '1';
+        aiIcon.style.transform = 'scale(1)';
+    }, 800);
+}
+
+// Scroll progress indicator
+function addScrollProgress() {
+    const progressBar = document.createElement('div');
+    progressBar.className = 'scroll-progress';
+    progressBar.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 0%;
+        height: 3px;
+        background: linear-gradient(90deg, var(--color-primary), #10b981);
+        z-index: 1000;
+        transition: width 0.3s ease;
+    `;
+    
+    document.body.appendChild(progressBar);
+    
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.pageYOffset;
+        const docHeight = document.body.offsetHeight - window.innerHeight;
+        const scrollPercent = (scrollTop / docHeight) * 100;
+        
+        progressBar.style.width = scrollPercent + '%';
+    });
+}
+
+// Initialize all interactions
+document.addEventListener('DOMContentLoaded', () => {
+    addButtonEffects();
+    addCardEffects();
+    addPricingInteraction();
+    animateHero();
+    addScrollProgress();
+    
+    // Set initial styles for hero animation
+    const heroTitle = document.querySelector('.hero__title');
+    const heroSubtitle = document.querySelector('.hero__subtitle');
+    const heroCTA = document.querySelector('.hero__cta');
+    const aiIcon = document.querySelector('.ai-icon');
+    
+    [heroTitle, heroSubtitle, heroCTA].forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'all 0.6s ease-out';
+    });
+    
+    aiIcon.style.opacity = '0';
+    aiIcon.style.transform = 'scale(0.8)';
+    aiIcon.style.transition = 'all 0.8s ease-out';
+});
+
+// Utility functions
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -255,172 +366,71 @@ function debounce(func, wait) {
     };
 }
 
-// Hover Effects Enhancement
-function initializeHoverEffects() {
-    const cards = document.querySelectorAll('.process__step, .benefit__card, .plan__card');
+// Lazy loading for animations
+const lazyAnimations = debounce(() => {
+    const elements = document.querySelectorAll('[data-animate]');
+    elements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight && rect.bottom > 0) {
+            el.classList.add('animate');
+        }
+    });
+}, 100);
+
+window.addEventListener('scroll', lazyAnimations);
+
+// Form accessibility improvements
+function improveFormAccessibility() {
+    const inputs = document.querySelectorAll('input, select, textarea');
     
-    cards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-8px)';
-            this.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    inputs.forEach(input => {
+        // Add focus indicators
+        input.addEventListener('focus', () => {
+            input.style.boxShadow = '0 0 0 3px rgba(37, 99, 235, 0.3)';
         });
         
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
+        input.addEventListener('blur', () => {
+            input.style.boxShadow = '';
         });
-    });
-}
-
-// Button Click Effects
-function initializeButtonEffects() {
-    const buttons = document.querySelectorAll('.btn');
-    
-    buttons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            // Create ripple effect
-            const ripple = document.createElement('span');
-            const rect = this.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            const x = e.clientX - rect.left - size / 2;
-            const y = e.clientY - rect.top - size / 2;
-            
-            ripple.style.cssText = `
-                position: absolute;
-                width: ${size}px;
-                height: ${size}px;
-                left: ${x}px;
-                top: ${y}px;
-                background: rgba(255, 255, 255, 0.3);
-                border-radius: 50%;
-                transform: scale(0);
-                animation: ripple 0.6s ease-out;
-                pointer-events: none;
-            `;
-            
-            this.appendChild(ripple);
-            
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
+        
+        // Add validation feedback
+        input.addEventListener('invalid', (e) => {
+            e.preventDefault();
+            input.style.borderColor = 'var(--color-error)';
         });
-    });
-}
-
-// Initialize all effects
-document.addEventListener('DOMContentLoaded', function() {
-    initializeHoverEffects();
-    initializeButtonEffects();
-});
-
-// Add CSS for ripple animation
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes ripple {
-        to {
-            transform: scale(2);
-            opacity: 0;
-        }
-    }
-    
-    @keyframes modalSlideOut {
-        from {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
-        to {
-            opacity: 0;
-            transform: scale(0.8) translateY(-20px);
-        }
-    }
-    
-    @keyframes fadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
-    }
-    
-    .btn {
-        position: relative;
-        overflow: hidden;
-    }
-`;
-document.head.appendChild(style);
-
-// Handle Form Submission Feedback
-function handleFormSubmission() {
-    // Listen for form submission events from iframe
-    window.addEventListener('message', function(event) {
-        if (event.origin === 'https://docs.google.com') {
-            if (event.data.type === 'form-submitted') {
-                // Show success message
-                showSuccessMessage();
+        
+        input.addEventListener('input', () => {
+            if (input.style.borderColor === 'var(--color-error)') {
+                input.style.borderColor = '';
             }
-        }
+        });
     });
 }
 
-function showSuccessMessage() {
-    const successMessage = document.createElement('div');
-    successMessage.className = 'success-message';
-    successMessage.innerHTML = `
-        <div class="success-content">
-            <h3>✅ Formulário Enviado com Sucesso!</h3>
-            <p>Obrigado pelo seu interesse. Entrarei em contato em breve!</p>
-        </div>
-    `;
+// Initialize accessibility improvements
+document.addEventListener('DOMContentLoaded', improveFormAccessibility);
+
+// Performance optimization: Reduce animations on low-end devices
+function optimizeForPerformance() {
+    const isLowEndDevice = navigator.hardwareConcurrency < 4 || 
+                          navigator.deviceMemory < 4 || 
+                          window.innerWidth < 768;
     
-    successMessage.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #059669;
-        color: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        z-index: 1001;
-        animation: slideInRight 0.5s ease-out;
-    `;
-    
-    document.body.appendChild(successMessage);
-    
-    setTimeout(() => {
-        successMessage.remove();
-        handleModalClose();
-    }, 3000);
+    if (isLowEndDevice) {
+        document.body.classList.add('reduced-motion');
+        
+        // Add CSS for reduced motion
+        const style = document.createElement('style');
+        style.textContent = `
+            .reduced-motion * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
 }
 
-// Initialize form handling
-document.addEventListener('DOMContentLoaded', handleFormSubmission);
-
-// Performance monitoring
-if ('performance' in window) {
-    window.addEventListener('load', function() {
-        setTimeout(() => {
-            const perfData = performance.getEntriesByType('navigation')[0];
-            console.log('Page Load Time:', perfData.loadEventEnd - perfData.loadEventStart, 'ms');
-        }, 0);
-    });
-}
-
-// Add error handling for iframe
-contactForm.addEventListener('error', function() {
-    modalLoading.innerHTML = `
-        <div style="text-align: center; color: #dc2626;">
-            <h3>Erro ao carregar formulário</h3>
-            <p>Por favor, tente novamente ou entre em contato diretamente.</p>
-            <button class="btn btn--primary" onclick="location.reload()">Tentar Novamente</button>
-        </div>
-    `;
-});
-
-// Preload critical resources
-function preloadResources() {
-    // Preload Google Forms
-    const link = document.createElement('link');
-    link.rel = 'prefetch';
-    link.href = 'https://docs.google.com/forms/d/e/1FAIpQLScKvJPWVrWIpeqJxOV2D9gDuxjlq-ZnsN_y067wphELMbGi3w/viewform';
-    document.head.appendChild(link);
-}
-
-// Initialize preloading
-document.addEventListener('DOMContentLoaded', preloadResources);
+// Initialize performance optimizations
+document.addEventListener('DOMContentLoaded', optimizeForPerformance);
