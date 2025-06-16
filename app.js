@@ -3,6 +3,10 @@ const heroCTA = document.getElementById('hero-cta');
 const finalCTA = document.getElementById('final-cta');
 const pricingCTAs = document.querySelectorAll('.pricing-cta');
 const contactModal = document.getElementById('contact-modal');
+if (contactModal) {
+    // Adicionar event listeners apenas se elemento existir
+    contactModal.addEventListener('click', openModal);
+}
 const successModal = document.getElementById('success-modal');
 const modalClose = document.getElementById('modal-close');
 const successClose = document.getElementById('success-close');
