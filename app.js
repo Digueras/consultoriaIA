@@ -1,421 +1,426 @@
 // DOM Elements
 const modal = document.getElementById('contactModal');
-const ctaButtons = document.querySelectorAll('.cta-button');
-const closeModalBtn = document.getElementById('closeModal');
-const modalOverlay = document.querySelector('.modal__overlay');
+const modalContainer = modal.querySelector('.modal__container');
+const modalBackdrop = modal.querySelector('.modal__backdrop');
+const modalClose = document.getElementById('closeModal');
+const modalLoading = document.getElementById('modalLoading');
+const contactForm = document.getElementById('contactForm');
+const openModalButtons = document.querySelectorAll('#openModal, #openModalFinal, .plan__cta');
 
-// Modal functionality
-function openModal() {
+// State Management
+let isModalOpen = false;
+let focusedElementBeforeModal = null;
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', function() {
+    initializeEventListeners();
+    initializeScrollAnimations();
+    initializeAccessibility();
+});
+
+// Event Listeners
+function initializeEventListeners() {
+    // Modal Open Buttons
+    openModalButtons.forEach(button => {
+        button.addEventListener('click', handleModalOpen);
+    });
+
+    // Modal Close Events
+    modalClose.addEventListener('click', handleModalClose);
+    modalBackdrop.addEventListener('click', handleModalClose);
+    
+    // Keyboard Events
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Iframe Load Event
+    contactForm.addEventListener('load', handleIframeLoad);
+    
+    // Plan Selection
+    document.querySelectorAll('.plan__cta').forEach(button => {
+        button.addEventListener('click', handlePlanSelection);
+    });
+    
+    // Smooth Scrolling for Internal Links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', handleSmoothScroll);
+    });
+}
+
+// Modal Functions
+function handleModalOpen(event) {
+    event.preventDefault();
+    
+    // Store focused element for accessibility
+    focusedElementBeforeModal = document.activeElement;
+    
+    // Show modal
     modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    isModalOpen = true;
+    
+    // Prevent body scroll
     document.body.style.overflow = 'hidden';
     
+    // Show loading state
+    modalLoading.style.display = 'flex';
+    contactForm.style.opacity = '0';
+    
     // Focus management
+    setTimeout(() => {
+        modalClose.focus();
+    }, 100);
+    
+    // Reload iframe to ensure fresh form
+    const currentSrc = contactForm.src;
+    contactForm.src = '';
+    contactForm.src = currentSrc;
+    
+    // Add animation classes
+    modalContainer.style.animation = 'modalSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+    modalBackdrop.style.animation = 'fadeIn 0.3s ease-out';
+}
+
+function handleModalClose(event) {
+    if (event) {
+        event.preventDefault();
+    }
+    
+    if (!isModalOpen) return;
+    
+    // Hide modal with animation
+    modalContainer.style.animation = 'modalSlideOut 0.3s ease-in';
+    modalBackdrop.style.animation = 'fadeOut 0.3s ease-in';
+    
+    setTimeout(() => {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        isModalOpen = false;
+        
+        // Restore body scroll
+        document.body.style.overflow = '';
+        
+        // Reset animations
+        modalContainer.style.animation = '';
+        modalBackdrop.style.animation = '';
+        
+        // Restore focus
+        if (focusedElementBeforeModal) {
+            focusedElementBeforeModal.focus();
+            focusedElementBeforeModal = null;
+        }
+    }, 300);
+}
+
+function handleIframeLoad() {
+    // Hide loading state
+    setTimeout(() => {
+        modalLoading.style.display = 'none';
+        contactForm.style.opacity = '1';
+        contactForm.style.transition = 'opacity 0.3s ease';
+    }, 500);
+}
+
+// Plan Selection
+function handlePlanSelection(event) {
+    const planType = event.target.getAttribute('data-plan');
+    
+    // Add visual feedback
+    event.target.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        event.target.style.transform = '';
+    }, 150);
+    
+    // Store selected plan in sessionStorage for form pre-filling
+    if (planType) {
+        sessionStorage.setItem('selectedPlan', planType);
+    }
+    
+    // Open modal
+    handleModalOpen(event);
+}
+
+// Keyboard Navigation
+function handleKeyDown(event) {
+    if (!isModalOpen) return;
+    
+    switch (event.key) {
+        case 'Escape':
+            handleModalClose();
+            break;
+        case 'Tab':
+            handleTabNavigation(event);
+            break;
+    }
+}
+
+function handleTabNavigation(event) {
     const focusableElements = modal.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
     
-    if (firstElement) {
-        firstElement.focus();
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+    
+    if (event.shiftKey) {
+        if (document.activeElement === firstFocusable) {
+            lastFocusable.focus();
+            event.preventDefault();
+        }
+    } else {
+        if (document.activeElement === lastFocusable) {
+            firstFocusable.focus();
+            event.preventDefault();
+        }
+    }
+}
+
+// Smooth Scrolling
+function handleSmoothScroll(event) {
+    event.preventDefault();
+    const targetId = event.currentTarget.getAttribute('href');
+    const targetElement = document.querySelector(targetId);
+    
+    if (targetElement) {
+        targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+}
+
+// Scroll Animations
+function initializeScrollAnimations() {
+    // Only add animations if user hasn't requested reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
     }
     
-    // Handle tab navigation within modal
-    const handleModalKeydown = (e) => {
-        if (e.key === 'Tab') {
-            if (e.shiftKey) {
-                if (document.activeElement === firstElement) {
-                    e.preventDefault();
-                    lastElement.focus();
-                }
-            } else {
-                if (document.activeElement === lastElement) {
-                    e.preventDefault();
-                    firstElement.focus();
-                }
-            }
-        }
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
     };
     
-    modal.addEventListener('keydown', handleModalKeydown);
-    
-    // Store the handler so we can remove it later
-    modal._keydownHandler = handleModalKeydown;
-}
-
-function closeModal() {
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
-    
-    // Remove the keydown handler if it exists
-    if (modal._keydownHandler) {
-        modal.removeEventListener('keydown', modal._keydownHandler);
-        modal._keydownHandler = null;
-    }
-}
-
-// Event listeners for modal
-ctaButtons.forEach(button => {
-    button.addEventListener('click', (e) => {
-        e.preventDefault();
-        openModal();
-        
-        // Track which button was clicked
-        const buttonText = button.textContent.trim();
-        const section = button.closest('section')?.className || 'unknown';
-        trackEvent('cta_click', {
-            button_text: buttonText,
-            section: section
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animation = 'scrollFadeIn 0.6s ease-out forwards';
+                observer.unobserve(entry.target);
+            }
         });
-    });
-});
-
-closeModalBtn.addEventListener('click', closeModal);
-
-modalOverlay.addEventListener('click', (e) => {
-    if (e.target === modalOverlay) {
-        closeModal();
-    }
-});
-
-// Close modal with Escape key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.classList.contains('active')) {
-        closeModal();
-    }
-});
-
-// Copy code functionality
-function copyCode() {
-    const codeBlock = document.getElementById('codeBlock');
-    const textArea = document.createElement('textarea');
-    textArea.value = codeBlock.textContent;
-    document.body.appendChild(textArea);
-    textArea.select();
+    }, observerOptions);
     
-    try {
-        document.execCommand('copy');
-        
-        // Visual feedback
-        const copyBtn = document.querySelector('.copy-btn');
-        const originalText = copyBtn.textContent;
-        copyBtn.textContent = '✅';
-        copyBtn.style.color = '#059669';
-        
-        setTimeout(() => {
-            copyBtn.textContent = originalText;
-            copyBtn.style.color = '';
-        }, 2000);
-        
-        trackEvent('code_copied', { code_type: 'google_forms_iframe' });
-    } catch (err) {
-        console.log('Fallback: copy not supported');
-        // Fallback: select the text for manual copying
-        const range = document.createRange();
-        range.selectNodeContents(codeBlock);
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-    }
-    
-    document.body.removeChild(textArea);
-}
-
-// Make copyCode function globally available
-window.copyCode = copyCode;
-
-// Smooth scrolling for internal links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-    });
-});
-
-// Intersection Observer for animations
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.animationPlayState = 'running';
-            observer.unobserve(entry.target);
-        }
-    });
-}, observerOptions);
-
-// Initialize animations on DOM load
-document.addEventListener('DOMContentLoaded', () => {
-    // Observe animated elements
+    // Observe elements for scroll animations
     const animatedElements = document.querySelectorAll(
-        '.process__step, .benefit__card, .impact__item, .pricing__card'
+        '.process__step, .benefit__card, .impact__item, .plan__card'
     );
     
-    animatedElements.forEach(el => {
-        el.style.animationPlayState = 'paused';
-        observer.observe(el);
+    animatedElements.forEach((element, index) => {
+        element.style.animationDelay = `${index * 0.1}s`;
+        observer.observe(element);
+    });
+}
+
+// Accessibility Enhancements
+function initializeAccessibility() {
+    // Add ARIA labels to interactive elements
+    const ctaButtons = document.querySelectorAll('.btn');
+    ctaButtons.forEach(button => {
+        if (!button.getAttribute('aria-label')) {
+            const text = button.textContent.trim();
+            button.setAttribute('aria-label', text);
+        }
     });
     
-    // Initialize hero animations
-    const heroElements = document.querySelectorAll('.hero__badge, .hero__headline, .hero__subtitle, .hero__cta');
-    const heroObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.animationPlayState = 'running';
+    // Add role attributes
+    const cards = document.querySelectorAll('.plan__card, .benefit__card, .process__step');
+    cards.forEach(card => {
+        card.setAttribute('role', 'article');
+    });
+    
+    // Enhance form accessibility
+    const iframe = document.getElementById('contactForm');
+    iframe.setAttribute('title', 'Formulário de Contato para Consultoria de IA');
+}
+
+// Performance Optimizations
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Hover Effects Enhancement
+function initializeHoverEffects() {
+    const cards = document.querySelectorAll('.process__step, .benefit__card, .plan__card');
+    
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-8px)';
+            this.style.transition = 'all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+}
+
+// Button Click Effects
+function initializeButtonEffects() {
+    const buttons = document.querySelectorAll('.btn');
+    
+    buttons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Create ripple effect
+            const ripple = document.createElement('span');
+            const rect = this.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.cssText = `
+                position: absolute;
+                width: ${size}px;
+                height: ${size}px;
+                left: ${x}px;
+                top: ${y}px;
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                transform: scale(0);
+                animation: ripple 0.6s ease-out;
+                pointer-events: none;
+            `;
+            
+            this.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    });
+}
+
+// Initialize all effects
+document.addEventListener('DOMContentLoaded', function() {
+    initializeHoverEffects();
+    initializeButtonEffects();
+});
+
+// Add CSS for ripple animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes ripple {
+        to {
+            transform: scale(2);
+            opacity: 0;
+        }
+    }
+    
+    @keyframes modalSlideOut {
+        from {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: scale(0.8) translateY(-20px);
+        }
+    }
+    
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+    }
+    
+    .btn {
+        position: relative;
+        overflow: hidden;
+    }
+`;
+document.head.appendChild(style);
+
+// Handle Form Submission Feedback
+function handleFormSubmission() {
+    // Listen for form submission events from iframe
+    window.addEventListener('message', function(event) {
+        if (event.origin === 'https://docs.google.com') {
+            if (event.data.type === 'form-submitted') {
+                // Show success message
+                showSuccessMessage();
             }
-        });
-    }, { threshold: 0.5 });
-
-    heroElements.forEach(el => {
-        el.style.animationPlayState = 'paused';
-        heroObserver.observe(el);
+        }
     });
-});
-
-// Enhanced button interactions
-ctaButtons.forEach(button => {
-    // Add ripple effect
-    button.addEventListener('click', function(e) {
-        const ripple = document.createElement('span');
-        const rect = this.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        const x = e.clientX - rect.left - size / 2;
-        const y = e.clientY - rect.top - size / 2;
-        
-        ripple.style.width = ripple.style.height = size + 'px';
-        ripple.style.left = x + 'px';
-        ripple.style.top = y + 'px';
-        ripple.classList.add('ripple');
-        
-        this.appendChild(ripple);
-        
-        setTimeout(() => {
-            ripple.remove();
-        }, 600);
-    });
-    
-    // Enhanced hover effects
-    button.addEventListener('mouseenter', () => {
-        button.style.transform = 'translateY(-2px)';
-    });
-    
-    button.addEventListener('mouseleave', () => {
-        button.style.transform = 'translateY(0)';
-    });
-});
-
-// Pricing card interactions
-const pricingCards = document.querySelectorAll('.pricing__card');
-
-pricingCards.forEach((card, index) => {
-    card.addEventListener('mouseenter', () => {
-        card.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15), 0 0 20px rgba(37, 99, 235, 0.1)';
-    });
-    
-    card.addEventListener('mouseleave', () => {
-        card.style.boxShadow = '';
-    });
-    
-    // Track pricing card clicks
-    card.addEventListener('click', () => {
-        const cardTitle = card.querySelector('.card__title')?.textContent || `Card ${index + 1}`;
-        trackEvent('pricing_card_view', {
-            card_name: cardTitle,
-            card_position: index + 1
-        });
-    });
-});
-
-// Performance optimization: Debounced scroll handler
-let ticking = false;
-
-function updateScrollPosition() {
-    const scrolled = window.pageYOffset;
-    const rate = scrolled * -0.3;
-    
-    // Subtle parallax effect for hero section
-    const hero = document.querySelector('.hero');
-    if (hero && scrolled < hero.offsetHeight) {
-        hero.style.transform = `translateY(${rate}px)`;
-    }
-    
-    ticking = false;
 }
 
-function requestTick() {
-    if (!ticking) {
-        requestAnimationFrame(updateScrollPosition);
-        ticking = true;
-    }
-}
-
-window.addEventListener('scroll', requestTick);
-
-// Analytics tracking helper
-function trackEvent(eventName, eventData = {}) {
-    // Google Analytics 4 tracking
-    if (typeof gtag !== 'undefined') {
-        gtag('event', eventName, eventData);
-    }
-    
-    // Facebook Pixel tracking
-    if (typeof fbq !== 'undefined') {
-        fbq('track', eventName, eventData);
-    }
-    
-    // Console log for development
-    console.log('Event tracked:', eventName, eventData);
-}
-
-// Form validation helper (for future Google Forms integration)
-function validateForm(formData) {
-    const errors = [];
-    
-    // Basic validation rules
-    if (!formData.name || formData.name.trim().length < 2) {
-        errors.push('Nome deve ter pelo menos 2 caracteres');
-    }
-    
-    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        errors.push('Email deve ter um formato válido');
-    }
-    
-    if (!formData.phone || formData.phone.length < 10) {
-        errors.push('Telefone deve ter pelo menos 10 dígitos');
-    }
-    
-    return errors;
-}
-
-// Page load performance tracking
-window.addEventListener('load', () => {
-    const loadTime = performance.now();
-    trackEvent('page_load', {
-        load_time: Math.round(loadTime)
-    });
-    
-    // Track page sections viewed
-    const sections = document.querySelectorAll('section');
-    const sectionObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const sectionName = entry.target.className || 'unknown-section';
-                trackEvent('section_view', {
-                    section: sectionName
-                });
-            }
-        });
-    }, { threshold: 0.5 });
-    
-    sections.forEach(section => {
-        sectionObserver.observe(section);
-    });
-});
-
-// Accessibility enhancements
-document.addEventListener('DOMContentLoaded', () => {
-    // Add skip link for keyboard navigation
-    const skipLink = document.createElement('a');
-    skipLink.href = '#main-content';
-    skipLink.textContent = 'Pular para o conteúdo principal';
-    skipLink.className = 'sr-only';
-    skipLink.style.cssText = `
-        position: absolute;
-        top: -40px;
-        left: 6px;
-        background: var(--color-primary);
-        color: white;
-        padding: 8px;
-        text-decoration: none;
-        border-radius: 4px;
-        z-index: 1000;
-        transition: top 0.3s;
+function showSuccessMessage() {
+    const successMessage = document.createElement('div');
+    successMessage.className = 'success-message';
+    successMessage.innerHTML = `
+        <div class="success-content">
+            <h3>✅ Formulário Enviado com Sucesso!</h3>
+            <p>Obrigado pelo seu interesse. Entrarei em contato em breve!</p>
+        </div>
     `;
     
-    skipLink.addEventListener('focus', () => {
-        skipLink.style.top = '6px';
-    });
+    successMessage.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #059669;
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        z-index: 1001;
+        animation: slideInRight 0.5s ease-out;
+    `;
     
-    skipLink.addEventListener('blur', () => {
-        skipLink.style.top = '-40px';
-    });
+    document.body.appendChild(successMessage);
     
-    document.body.insertBefore(skipLink, document.body.firstChild);
-});
+    setTimeout(() => {
+        successMessage.remove();
+        handleModalClose();
+    }, 3000);
+}
 
-// Error handling
-window.addEventListener('error', (e) => {
-    console.error('Application error:', e.error);
-    trackEvent('application_error', {
-        message: e.message,
-        filename: e.filename,
-        lineno: e.lineno
-    });
-});
+// Initialize form handling
+document.addEventListener('DOMContentLoaded', handleFormSubmission);
 
-// Unhandled promise rejection handling
-window.addEventListener('unhandledrejection', (e) => {
-    console.error('Unhandled promise rejection:', e.reason);
-    trackEvent('promise_rejection', {
-        reason: e.reason?.toString() || 'Unknown'
-    });
-});
-
-// Contact methods interaction tracking
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('contact-item')) {
-        const contactMethod = e.target.textContent.includes('@') ? 'email' : 'phone';
-        trackEvent('contact_method_click', {
-            method: contactMethod
-        });
-    }
-});
-
-// Improved mobile experience
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-if (isMobile) {
-    // Optimize touch interactions
-    document.addEventListener('touchstart', (e) => {
-        if (e.target.classList.contains('btn')) {
-            e.target.style.transform = 'scale(0.98)';
-        }
-    });
-    
-    document.addEventListener('touchend', (e) => {
-        if (e.target.classList.contains('btn')) {
-            setTimeout(() => {
-                e.target.style.transform = '';
-            }, 150);
-        }
-    });
-    
-    // Track mobile usage
-    trackEvent('mobile_visit', {
-        user_agent: navigator.userAgent.substring(0, 100)
+// Performance monitoring
+if ('performance' in window) {
+    window.addEventListener('load', function() {
+        setTimeout(() => {
+            const perfData = performance.getEntriesByType('navigation')[0];
+            console.log('Page Load Time:', perfData.loadEventEnd - perfData.loadEventStart, 'ms');
+        }, 0);
     });
 }
 
-// Initialize application
-console.log('🚀 Consultoria de IA - Landing Page inicializada com sucesso!');
-console.log('📊 Analytics e interações configurados');
-console.log('♿ Recursos de acessibilidade ativados');
-console.log('📱 Otimizações mobile aplicadas');
+// Add error handling for iframe
+contactForm.addEventListener('error', function() {
+    modalLoading.innerHTML = `
+        <div style="text-align: center; color: #dc2626;">
+            <h3>Erro ao carregar formulário</h3>
+            <p>Por favor, tente novamente ou entre em contato diretamente.</p>
+            <button class="btn btn--primary" onclick="location.reload()">Tentar Novamente</button>
+        </div>
+    `;
+});
 
-// Export functions for potential external use
-window.AIConsultancy = {
-    openModal,
-    closeModal,
-    trackEvent,
-    validateForm,
-    copyCode
-};
+// Preload critical resources
+function preloadResources() {
+    // Preload Google Forms
+    const link = document.createElement('link');
+    link.rel = 'prefetch';
+    link.href = 'https://docs.google.com/forms/d/e/1FAIpQLScKvJPWVrWIpeqJxOV2D9gDuxjlq-ZnsN_y067wphELMbGi3w/viewform';
+    document.head.appendChild(link);
+}
+
+// Initialize preloading
+document.addEventListener('DOMContentLoaded', preloadResources);
