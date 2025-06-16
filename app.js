@@ -1,3 +1,5 @@
+// Modal functionality - Versão Corrigida
+document.addEventListener('DOMContentLoaded', function() {
 // DOM Elements
 const heroCTA = document.getElementById('hero-cta');
 const finalCTA = document.getElementById('final-cta');
@@ -13,21 +15,78 @@ const successClose = document.getElementById('success-close');
 const contactForm = document.getElementById('contact-form');
 const packageSelect = document.getElementById('package');
 
-// Modal Functions
+// Event Listeners para Modal
+const openModalBtns = document.querySelectorAll('.btn--primary, .hero__cta, .cta-button');
+const closeModalBtns = document.querySelectorAll('#closeModal, .modal__close');
+
+// Verificar se elementos existem
+if (openModalBtns.length > 0 && contactModal) {
+    openModalBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal(contactModal);
+        });
+    });
+}
+
+if (closeModalBtns.length > 0) {
+    closeModalBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeModal(contactModal);
+        });
+    });
+}
+
+// Fechar modal clicando no overlay
+if (contactModal) {
+    contactModal.addEventListener('click', function(e) {
+        if (e.target === contactModal) {
+            closeModal(contactModal);
+        }
+    });
+}
+
+// Fechar modal com tecla ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && contactModal && contactModal.classList.contains('modal--active')) {
+        closeModal(contactModal);
+    }
+});
+// Funções do Modal
 function openModal(modal) {
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Focus first input
-    const firstInput = modal.querySelector('input, select, textarea');
-    if (firstInput) {
-        setTimeout(() => firstInput.focus(), 100);
+    if (modal) {
+        modal.classList.add('modal--active');
+        document.body.style.overflow = 'hidden';
+        
+        // Foco para acessibilidade
+        const firstFocusable = modal.querySelector('input, button, select, textarea');
+        if (firstFocusable) firstFocusable.focus();
+        
+        // Analytics tracking
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'modal_open', {
+                'event_category': 'engagement',
+                'event_label': 'contact_form'
+            });
+        }
     }
 }
 
 function closeModal(modal) {
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
+    if (modal) {
+        modal.classList.remove('modal--active');
+        document.body.style.overflow = '';
+        
+        // Analytics tracking
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'modal_close', {
+                'event_category': 'engagement',
+                'event_label': 'contact_form'
+            });
+        }
+    }
+}
 }
 
 function closeAllModals() {
@@ -330,6 +389,39 @@ function addScrollProgress() {
         
         progressBar.style.width = scrollPercent + '%';
     });
+}
+// Controle do loading do iframe
+const formsIframe = document.getElementById('formsIframe');
+const loadingOverlay = document.getElementById('loadingOverlay');
+
+if (formsIframe && loadingOverlay) {
+    formsIframe.addEventListener('load', function() {
+        setTimeout(() => {
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 300);
+        }, 800);
+    });
+}
+
+// Validação aprimorada do formulário
+function validateForm(formData) {
+    const errors = [];
+    
+    if (!formData.get('name') || formData.get('name').length < 2) {
+        errors.push('Nome deve ter pelo menos 2 caracteres');
+    }
+    
+    if (!formData.get('email') || !/\S+@\S+\.\S+/.test(formData.get('email'))) {
+        errors.push('Email inválido');
+    }
+    
+    if (!formData.get('phone') || formData.get('phone').length < 10) {
+        errors.push('WhatsApp deve ter pelo menos 10 dígitos');
+    }
+    
+    return errors;
 }
 
 // Initialize all interactions
