@@ -22,6 +22,16 @@
   --color-focus-ring: rgba(33, 128, 141, 0.4);
   --color-select-caret: rgba(19, 52, 59, 0.8);
 
+  {
+    /* Variáveis existentes... */
+    
+    /* Variáveis do Modal */
+    --modal-backdrop: rgba(15, 23, 42, 0.8);
+    --modal-border-radius: 16px;
+    --modal-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    --modal-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
   /* Common style patterns */
   --focus-ring: 0 0 0 3px var(--color-focus-ring);
   --focus-outline: 2px solid var(--color-primary);
@@ -802,7 +812,69 @@ select.form-control {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 1; }
 }
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--modal-backdrop);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--modal-transition);
+    z-index: 1000;
+}
 
+.modal--active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal__content {
+    background: white;
+    border-radius: var(--modal-border-radius);
+    box-shadow: var(--modal-shadow);
+    max-width: 480px;
+    width: 90vw;
+    max-height: 90vh;
+    position: relative;
+    transform: scale(0.8) translateY(50px);
+    transition: var(--modal-transition);
+    overflow: hidden;
+}
+
+.modal--active .modal__content {
+    transform: scale(1) translateY(0);
+}
+
+.modal__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+
+.modal__close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
 /* Sections */
 .section-title {
   text-align: center;
@@ -1174,7 +1246,17 @@ select.form-control {
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(5px);
 }
-
+@media (max-width: 640px) {
+    .modal__content {
+        width: 95vw;
+        max-height: 95vh;
+        border-radius: 12px;
+    }
+    
+    .forms-iframe {
+        height: 600px;
+    }
+}
 .modal__content {
   background: var(--color-surface);
   border-radius: var(--radius-lg);
