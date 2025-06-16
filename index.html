@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Consultoria de IA Personalizada para Profissionais - A inteligência artificial não vai tomar seu emprego, mas alguém que sabe usar IA vai.">
     <meta name="keywords" content="consultoria IA, inteligência artificial, automação, produtividade profissional">
+    <meta name="theme-color" content="#21808d">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <title>Consultoria de IA Personalizada para Profissionais</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -202,30 +205,30 @@
         </div>
     </section>
 
-<!-- Modal de Contato -->
-<div class="modal-overlay" id="contact-modal">
-    <div class="modal-container">
-        <div class="modal-header">
-            <button class="modal-close" id="modal-close" aria-label="Fechar modal">×</button>
-            <h2 class="modal-title">Vamos Começar Sua Jornada com IA</h2>
-            <p class="modal-subtitle">Preencha os dados abaixo e entraremos em contato</p>
-        </div>
-        <div class="modal-body">
-            <div class="forms-container">
-                <div class="loading-overlay" id="loadingOverlay">
-                    <div class="loading-spinner"></div>
-                    <div class="loading-text">Carregando formulário...</div>
+    <!-- Modal de Contato -->
+    <div class="modal-overlay" id="contact-modal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <button class="modal-close" id="modal-close" aria-label="Fechar modal">×</button>
+                <h2 class="modal-title">Vamos Começar Sua Jornada com IA</h2>
+                <p class="modal-subtitle">Preencha os dados abaixo e entraremos em contato em até 2 horas</p>
+            </div>
+            <div class="modal-body">
+                <div class="forms-container">
+                    <div class="loading-overlay" id="loadingOverlay">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Carregando formulário...</div>
+                    </div>
+                    <iframe 
+                        class="forms-iframe" 
+                        id="formsIframe"
+                        src="https://docs.google.com/forms/d/e/1FAIpQLScKvJPWVrWIpeqJxOV2D9gDuxjlq-ZnsN_y067wphELMbGi3w/viewform?embedded=true"
+                        frameborder="0">
+                    </iframe>
                 </div>
-                <iframe 
-                    class="forms-iframe" 
-                    id="formsIframe"
-                    src="https://docs.google.com/forms/d/e/1FAIpQLScKvJPWVrWIpeqJxOV2D9gDuxjlq-ZnsN_y067wphELMbGi3w/viewform?embedded=true"
-                    frameborder="0">
-                </iframe>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Success Modal -->
     <div class="modal" id="success-modal">
